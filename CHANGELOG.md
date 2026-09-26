@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- CI job `blender-integration` that runs `tests/blender_integration_test.py`
+  and `tests/test_compat.py` in headless Blender 4.2 LTS and 5.0.
+
+### Fixed
+- Blender 5.0: `compat.get_eevee_engine_name()` returns `BLENDER_EEVEE`
+  (5.0 dropped `BLENDER_EEVEE_NEXT`), and `ai.py` no longer hardcodes it.
+- Blender 5.0: `compat.get_fcurves()` reads F-curves from
+  layers → strips → channelbags; `msfs` animation info uses it instead of
+  the removed `Action.fcurves`.
+
 ## [0.4.0]: 2026-05-13
 
 ### Changed

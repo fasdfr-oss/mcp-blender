@@ -52,9 +52,61 @@ jobs:
         run: |
           pytest tests/ --ignore=tests/blender_integration_test.py -v
 
+  blender-integration:
+    runs-on: [self-hosted, Linux, X64, haven]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - blender-series: "4.2"
+            blender-version: "4.2.23"
+          - blender-series: "5.0"
+            blender-version: "5.0.1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Blender path
+        run: echo "BLENDER_DIR=$RUNNER_TEMP/blender-${{ matrix.blender-version }}" >> "$GITHUB_ENV"
+
+      - name: Cache Blender
+        id: cache-blender
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BLENDER_DIR }}
+          key: blender-${{ matrix.blender-version }}-linux-x64
+
+      - name: Download Blender ${{ matrix.blender-version }}
+        if: steps.cache-blender.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$BLENDER_DIR"
+          curl -fsSL "https://download.blender.org/release/Blender${{ matrix.blender-series }}/blender-${{ matrix.blender-version }}-linux-x64.tar.xz" \
+            | tar -xJ --strip-components=1 -C "$BLENDER_DIR"
+
+      - name: Install Blender runtime libraries
+        run: |
+          # Headless Blender still needs EGL/GL and a few X11 client libraries
+          if ! ldconfig -p | grep -q 'libEGL.so.1'; then
+            SUDO=$([ "$(id -u)" -eq 0 ] && echo "" || echo "sudo")
+            $SUDO apt-get update -q
+            $SUDO apt-get install -y -q --no-install-recommends \
+              libegl1 libgl1 libxkbcommon0 libsm6 libxi6 libxrender1 libxxf86vm1 libxfixes3
+          fi
+          "$BLENDER_DIR/blender" --version
+
+      - name: Run Blender integration tests
+        run: |
+          "$BLENDER_DIR/blender" --background --factory-startup --python-exit-code 1 \
+            --python tests/blender_integration_test.py
+
+      - name: Run Blender compat tests
+        run: |
+          "$BLENDER_DIR/blender" --background --factory-startup --python-exit-code 1 \
+            --python tests/test_compat.py
+
   build:
     runs-on: [self-hosted, Linux, X64, haven]
-    needs: [lint, test]
+    needs: [lint, test, blender-integration]
     steps:
       - uses: actions/checkout@v4
 

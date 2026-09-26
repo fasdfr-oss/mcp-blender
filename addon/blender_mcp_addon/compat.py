@@ -26,12 +26,12 @@ def get_fcurves(action):
     In Blender 4.2 and earlier, actions use direct fcurves.
     """
     if IS_5_0_OR_LATER:
-        # Blender 5.0+ uses slots/layers/strips/channels
+        # Blender 5.0+ uses layers/strips/channelbags; fcurves live in channelbags
         fcurves = []
-        for slot in action.slots:
-            for layer in slot.layers:
-                for strip in layer.strips:
-                    fcurves.extend(strip.channels)
+        for layer in action.layers:
+            for strip in layer.strips:
+                for channelbag in strip.channelbags:
+                    fcurves.extend(channelbag.fcurves)
         return fcurves
     else:
         # Blender 4.2 and earlier use direct fcurves
@@ -221,8 +221,11 @@ def get_eevee_engine_name():
     """
     Get the correct EEVEE engine identifier for the Blender version.
 
-    EEVEE Next was introduced in 4.2, so for 4.2+ it's always BLENDER_EEVEE_NEXT.
+    EEVEE Next was introduced in 4.2 as BLENDER_EEVEE_NEXT; Blender 5.0
+    renamed it back to BLENDER_EEVEE.
     """
+    if IS_5_0_OR_LATER:
+        return "BLENDER_EEVEE"
     if IS_4_2_OR_LATER:
         return "BLENDER_EEVEE_NEXT"
     return "BLENDER_EEVEE"

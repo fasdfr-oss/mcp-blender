@@ -461,6 +461,8 @@ def test_compat_eevee_name(runner: TestRunner):
     """Test EEVEE engine name detection."""
     name = compat.get_eevee_engine_name()
     assert name in ("BLENDER_EEVEE", "BLENDER_EEVEE_NEXT"), f"Unexpected EEVEE name: {name}"
+    engines = {i.identifier for i in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items}
+    assert name in engines, f"{name} is not a valid render engine ({sorted(engines)})"
 
 
 def test_compat_principled_inputs(runner: TestRunner):

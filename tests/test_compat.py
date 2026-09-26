@@ -38,6 +38,7 @@ def test_in_blender():
     # Test EEVEE engine name
     engine_name = compat.get_eevee_engine_name()
     assert engine_name in ("BLENDER_EEVEE", "BLENDER_EEVEE_NEXT")
+    assert engine_name in {i.identifier for i in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items}
     print(f"EEVEE engine name: {engine_name}")
 
     # Test Principled BSDF input mapping
